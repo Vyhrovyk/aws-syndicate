@@ -377,7 +377,6 @@ def resolve_meta(overall_meta):
                 resolved_name = resolved_name + iam_suffix
             if name != resolved_name:
                 resolved_names[name] = resolved_name
-    _LOG.debug('Going to resolve names in meta')
     _LOG.debug('Resolved names mapping: {0}'.format(str(resolved_names)))
     for current_name, resolved_name in resolved_names.items():
         overall_meta[resolved_name] = overall_meta.pop(current_name)

@@ -20,7 +20,8 @@ from botocore.exceptions import ClientError
 from syndicate.commons.log_helper import get_logger
 from syndicate.connection.helper import retry
 from syndicate.core import CONFIG, CONN
-from syndicate.core.build.meta_processor import S3_PATH_NAME
+from syndicate.core.build.meta_processor import (S3_PATH_NAME,
+                                                 resolve_resource_name)
 from syndicate.core.helper import (create_pool, unpack_kwargs,
                                    exit_on_exception)
 from syndicate.core.resources.helper import (build_description_obj,
@@ -200,6 +201,7 @@ def _create_lambda_from_meta(name, meta):
         return describe_lambda(name, meta, lambda_def)
 
     role_name = meta['iam_role_name']
+    role_name = resolve_role_name(role_name)
     role_arn = CONN.iam().check_if_role_exists(role_name)
     if not role_arn:
         raise AssertionError('Role {} does not exist; '
@@ -276,6 +278,20 @@ def _create_lambda_from_meta(name, meta):
                                                   meta=meta,
                                                   lambda_def=lambda_def)
     return describe_lambda(name, meta, lambda_def)
+
+
+def resolve_role_name(role_name):
+    """
+    For the case if the role was deployed separately
+    :param role_name: name of the role to resolve
+    :return:
+    """
+    if CONFIG.resources_prefix not in role_name and \
+            CONFIG.resources_suffix not in role_name:
+        role_name = resolve_resource_name(role_name)
+        if CONFIG.iam_suffix:
+            role_name = role_name + CONFIG.iam_suffix
+    return role_name
 
 
 @exit_on_exception
